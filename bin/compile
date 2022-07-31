@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # This script configures ssh on Heroku to use the deploy key.
 # This is needed to install private dependencies.
 #
@@ -16,10 +18,12 @@ if [ ! -d ~/.ssh ]; then
   chmod 700 ~/.ssh
 fi
 
+env_dir=$3
+
 # Create the key files
-cat $ENV_DIR/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key
+cat $env_dir/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key
 chmod 400 ~/.ssh/deploy-key
-cat $ENV_DIR/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key.pub
+cat $env_dir/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key.pub
 #ssh-add ~/.ssh/deploy-key
 
 # If you want to disable host verification, you could use that.

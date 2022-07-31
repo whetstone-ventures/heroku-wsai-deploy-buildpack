@@ -1,0 +1,44 @@
+# This script configures ssh on Heroku to use the deploy key.
+# This is needed to install private dependencies.
+#
+# Note that this does not work with Heroku review apps. Indeed review apps can
+# inherits env variables from their parents, but they access their values after
+# the build. You would need a way to pass the ssh key to this script another
+# way.
+#
+# See also
+# * https://stackoverflow.com/questions/21297755/heroku-python-dependencies-in-private-repos-without-storing-my-password#
+# * https://github.com/bjeanes/ssh-private-key-buildpack
+
+# Ensure we have an ssh folder
+if [ ! -d ~/.ssh ]; then
+  mkdir -p ~/.ssh
+  chmod 700 ~/.ssh
+fi
+
+# Create the key files
+cat $ENV_DIR/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key
+chmod 400 ~/.ssh/deploy-key
+cat $ENV_DIR/DEPLOY_KEY | base64 --decode > ~/.ssh/deploy-key.pub
+#ssh-add ~/.ssh/deploy-key
+
+# If you want to disable host verification, you could use that.
+#ssh -oStrictHostKeyChecking=no -T git@github.com 2>&1
+
+# Run that if you want to check that ssh uses the correct key.
+#ssh -i ~/.ssh/deploy-key -T git@github.com || true
+
+# Configure ssh to use the correct deploy key when connecting to github.
+# Disables host verification.
+echo -e "Host github.com\n"\
+        "  IdentityFile ~/.ssh/deploy-key\n"\
+        "  IdentitiesOnly yes\n"\
+        "  UserKnownHostsFile=/dev/null\n"\
+        "  StrictHostKeyChecking no"\
+        >> ~/.ssh/config
+
+# Unfortunately this does not seem to work.
+#export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy-key"
+
+# The vanilla python buildpack can now install all the dependencies in
+# requirement.txt
